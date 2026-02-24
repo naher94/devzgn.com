@@ -1,0 +1,18 @@
+title: Devzgn
+description: "A hybrid discipline that unifies software development and design into a single practice."
+baseurl: ""
+url: "https://devzgn.com"
+author: Rehan Butt
+year: 2026
+
+markdown: kramdown
+
+sass:
+  sass_dir: _sass
+  style: compressed
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - .git

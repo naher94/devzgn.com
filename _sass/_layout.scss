@@ -1,0 +1,363 @@
+// ============================================================
+//  HEADER
+// ============================================================
+
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: $z-header;
+  padding: calc(28px + env(safe-area-inset-top)) $fluid-padding 28px;
+
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.site-logo {
+  font-family: $font-primary;
+  font-weight: 700;
+  font-size: $font-size-logo;
+  color: semantic-color(text);
+  text-decoration: none;
+
+  &:hover {
+    opacity: 1; // override base a:hover since this is a logo
+  }
+}
+
+.site-pronunciation {
+  font-family: $font-primary;
+  font-weight: 300;
+  font-style: italic;
+  font-size: $font-size-pronunciation;
+  color: semantic-color(text-secondary);
+}
+
+
+// ============================================================
+//  BLOB LAYER
+//  Fixed, behind everything, pointer-events off so clicks pass through
+// ============================================================
+
+.blob-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: $z-blob;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  opacity: 0.85;
+  pointer-events: none;
+  display: block;
+}
+
+.blob--top {
+  width: 100vw;
+  max-width: $blob-max-width;
+  height: auto;
+  top: -27vh;
+  left: -23vw;
+  rotate: -15deg;
+
+  // Scroll-driven: position + blur together
+  animation-name: blob-top-move;
+  animation-duration: 1ms;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-timeline: scroll(root block);
+}
+
+.blob--bottom {
+  width: 100vw;
+  max-width: $blob-max-width;
+  height: auto;
+  bottom: -45vh;
+  right: -30vw;
+  rotate: 195deg;
+
+  // Scroll-driven: position + blur together
+  animation-name: blob-bottom-move;
+  animation-duration: 1ms;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-timeline: scroll(root block);
+}
+
+@keyframes blob-top-move {
+  0%   { transform: translate(0, 0) scale(1);        filter: blur(0px); }
+  40%  { transform: translate(-20px, 10px) scale(0.9, 1); filter: blur(8px); }
+  70%  { transform: translate(-40px, 40px) scale(1.03, 1.1); filter: blur(4px); }
+  100% { transform: translate(0, 0) scale(1);        filter: blur(0px); }
+}
+
+@keyframes blob-bottom-move {
+  0%   { transform: translate(0, 0) scale(1);              filter: blur(0px); }
+  40%  { transform: translate(-15px, -60px) scale(1.08);   filter: blur(10px); }
+  70%  { transform: translate(-35px, -110px) scale(1.04);  filter: blur(5px); }
+  100% { transform: translate(0, 0) scale(1);              filter: blur(0px); }
+}
+
+
+// ============================================================
+//  HERO SCROLL CONTAINER
+//  700vh height creates the scroll distance for the animation
+// ============================================================
+
+.hero-scroll-container {
+  height: $hero-scroll-height;
+  position: relative;
+  z-index: $z-content;
+}
+
+.hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: $fluid-padding;
+  padding-right: $fluid-padding;
+}
+
+
+// ============================================================
+//  HERO WORD (.hw) — THE MORPHING WORD
+//  Flex row with hidden overflow reveals sliding in horizontally
+// ============================================================
+
+.hw {
+  display: flex;
+  // flex-end keeps all spans sitting on the same text baseline
+  // without relying on CSS baseline alignment (which shifts when
+  // reveal spans appear/disappear at max-width: 0)
+  align-items: flex-end;
+  flex-wrap: nowrap;
+  font-family: $font-primary;
+  font-weight: $hero-font-weight;
+  font-size: $hero-font-size;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: semantic-color(text);
+  white-space: nowrap;
+}
+
+// Always-visible base letters
+.hw__base {
+  display: block; // block inside flex = flex item, no inline weirdness
+  color: semantic-color(text);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+// Gray modifier for extra/revealed letters
+.hw__gray {
+  color: color-mix(in srgb, currentColor 40%, transparent);
+  display: block;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+// Reveal containers — hidden by default, opened via JS class on .hw
+// CSS transition handles the smooth animation when the class is toggled
+.hw__reveal {
+  display: block; // block inside flex = flex item
+  overflow: hidden;
+  max-width: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+  // Smooth width transition triggered by JS class toggle
+  transition: max-width $reveal-duration $reveal-easing;
+}
+
+// "+" symbol spans — hidden by default, shown via JS class on .hw
+.hw__plus {
+  display: block; // block inside flex = flex item
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  color: semantic-color(text);
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: max-width $reveal-duration $reveal-easing,
+              opacity $opacity-transition-duration ease;
+}
+
+
+// ============================================================
+//  STAGE ACTIVATIONS
+//  JS scroll handler adds/removes classes on .hw to toggle stages.
+//  CSS transition on .hw__reveal and .hw__plus handles smoothness.
+//
+//  Stages:
+//    1: Devzgn           (no classes)
+//    2: Develop+zgn      .hw--elop + .hw--plus1
+//    3: Devzgn           (no classes)
+//    4: Dev+dezign       .hw--plus2 + .hw--de + .hw--i
+//    5: Devzgn           (no classes)
+//    6: Develop+dezign   .hw--elop + .hw--plus1 + .hw--de + .hw--i
+//    7: Devzgn           (no classes)
+// ============================================================
+
+// "elop" — open when .hw has .hw--elop
+.hw--elop .hw__reveal--elop { max-width: 3.2em; }
+
+// "+" after Develop — open with elop
+.hw--plus1 .hw__plus--1 { max-width: 0.95em; opacity: 1; }
+
+// "+" before dezign — open only in stage 4 (not stage 6, where plus-1 handles it)
+.hw--plus2 .hw__plus--2 { max-width: 0.95em; opacity: 1; }
+
+// "de" prefix — open in stages 4 & 6
+.hw--de .hw__reveal--de { max-width: 1.7em; }
+
+// "i" in dezign — open in stages 4 & 6
+.hw--i .hw__reveal--i { max-width: 0.8em; }
+
+
+// ============================================================
+//  CONTENT SECTIONS (below hero)
+// ============================================================
+
+.content-sections {
+  position: relative;
+  z-index: $z-content;
+  padding: 0 $fluid-padding;
+}
+
+.content-section {
+  padding: 80px 0;
+  max-width: $content-max-width;
+
+  & + & {
+    border-top: 1px solid semantic-color(border);
+  }
+}
+
+.text-body {
+  font-family: $font-primary;
+  font-weight: $body-font-weight;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.7;
+  color: semantic-color(text);
+  text-wrap: pretty;
+}
+
+.text-body--small {
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+  color: semantic-color(text-secondary);
+}
+
+
+// ============================================================
+//  FOOTER
+// ============================================================
+
+.site-footer {
+  position: relative;
+  z-index: $z-content;
+  display: flex;
+  flex-direction: column;
+  margin-top: 40px;
+  padding: 0 $fluid-padding;
+  padding-block-start: 4rem;
+  padding-block-end: calc(4rem + env(safe-area-inset-bottom));
+
+  // Frosted glass background
+  background: color-mix(in srgb, semantic-color(background) 25%, transparent);
+  backdrop-filter: blur($footer-backdrop-blur);
+  -webkit-backdrop-filter: blur($footer-backdrop-blur);
+
+  font-family: $font-primary;
+  font-weight: $body-font-weight;
+  font-size: $font-size-footer;
+  color: semantic-color(text-secondary);
+}
+
+.footer-coined {
+  max-width: $content-max-width;
+  text-wrap: pretty;
+}
+
+.footer-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-block-start: 5rem;
+}
+
+.footer-copy {
+  font-weight: 700;
+  font-size: $font-size-footer;
+  color: semantic-color(text);
+}
+
+.footer-credit {
+  a {
+    font-weight: 400;
+  }
+}
+
+
+// (No @supports fallback needed — JS class toggling works in all browsers)
+
+
+// ============================================================
+//  RESPONSIVE
+// ============================================================
+
+@include media-query($on-laptop) {
+  .hw {
+    font-size: clamp(3rem, 8vw, 5.5rem);
+  }
+}
+
+@include media-query($on-palm) {
+  .site-header {
+    padding: calc(16px + env(safe-area-inset-top)) 20px 16px;
+  }
+
+  .hw {
+    font-size: clamp(2.2rem, 11vw, 3.5rem);
+  }
+
+  // Shorter hero on mobile — less scrolling through animation
+  .hero-scroll-container {
+    height: $hero-scroll-height-mobile;
+  }
+
+  .blob--top {
+    width: 120vw;
+    top: -10vh;
+    right: -20vw;
+  }
+
+  .blob--bottom {
+    width: 110vw;
+    bottom: -15vh;
+    right: -18vw;
+  }
+
+  .content-section {
+    padding: 48px 0;
+  }
+
+  .footer-coined {
+    max-width: 100%;
+  }
+
+  .footer-bar {
+    flex-direction: column;
+    gap: 6px;
+    align-items: start;
+  }
+}

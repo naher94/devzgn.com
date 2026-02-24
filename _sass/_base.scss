@@ -1,0 +1,50 @@
+// ============================================================
+//  RESET & BASE
+// ============================================================
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body, h1, h2, h3, h4, h5, h6, p, ul, ol, li, figure, blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  // overflow-x: clip prevents horizontal scrollbar WITHOUT creating a new
+  // scroll container — safe for position: sticky children.
+  // (overflow-x: hidden on body would break sticky by making body the scroll root)
+  overflow-x: clip;
+}
+
+body {
+  font-family: $font-primary;
+  font-weight: $body-font-weight;
+  font-size: 16px;
+  line-height: 1.65;
+  color: semantic-color(text);
+  background-color: semantic-color(background);
+  // No overflow-x here — setting it would create a new scroll container
+  // and break position: sticky on .hero-sticky
+  min-height: 100vh;
+}
+
+a {
+  color: semantic-color(text);
+  text-decoration: underline;
+  text-underline-offset: 0.1em;
+  text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
+  transition: $tight-spring;
+
+  &:hover {
+    text-decoration-thickness: 0.1em;
+    text-decoration-color: color-mix(in srgb, currentColor 100%, transparent);
+  }
+}
+
+img {
+  max-width: 100%;
+  vertical-align: middle;
+}
