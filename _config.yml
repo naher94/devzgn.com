@@ -5,6 +5,9 @@ url: "https://devzgn.com"
 author: Rehan Butt
 year: 2026
 
+plugins:
+  - jekyll-sitemap
+
 markdown: kramdown
 
 sass:
